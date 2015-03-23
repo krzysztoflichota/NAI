@@ -61,18 +61,18 @@ public class CoordinateSystemComponent extends JComponent {
         graphics2D.setStroke(new BasicStroke(3));
         graphics2D.setColor(Color.GREEN);
 
-        int x1 = (-(WIDTH/2));
-        int x2 = (WIDTH/2);
-        int y1;
-        int y2;
+        double x1 = (-(WIDTH/2));
+        double x2 = (WIDTH/2);
+        double y1;
+        double y2;
 
         if(neuron.getWeightY() != 0) {
-            y1 = (int) ((neuron.getWeightX() * x1 + neuron.getTeta()) / neuron.getWeightY());
-            y2 = (int) ((neuron.getWeightX() * x2 + neuron.getTeta()) / neuron.getWeightY());
+            y1 = ((neuron.getWeightX() * x1 + neuron.getTeta()) / neuron.getWeightY());
+            y2 = ((neuron.getWeightX() * x2 + neuron.getTeta()) / neuron.getWeightY());
         }
         else{
-            x1 = (int) (neuron.getTeta()/neuron.getWeightX());
-            x2 = (int) (neuron.getTeta()/neuron.getWeightX());
+            x1 = (neuron.getTeta()/neuron.getWeightX());
+            x2 = (neuron.getTeta()/neuron.getWeightX());
 
             y1 = -HEIGHT/2;
             y2 = HEIGHT/2;
