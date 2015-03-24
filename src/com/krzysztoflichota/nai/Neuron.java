@@ -23,7 +23,7 @@ public class Neuron extends JFrame{
             public void run() {
                 JFrame f = new Neuron();
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                f.setResizable(false);
+                //f.setResizable(false);
                 f.setTitle("Model Neuronu");
                 f.setVisible(true);
             }
@@ -36,6 +36,8 @@ public class Neuron extends JFrame{
     private JRadioButton functionUp, functionDown;
     private JLabel cursorPosition;
 
+    private JPanel controls;
+
     public static final double initWeightX = 1.00;
     public static final double initWeightY = 1.00;
     public static final double initTeta = 0.00;
@@ -44,6 +46,14 @@ public class Neuron extends JFrame{
         initFields();
         initGUI();
         pack();
+        setSizes();
+    }
+
+    private void setSizes() {
+        int controlsMinHeight = controls.getPreferredSize().height + 35;
+        int controlsMinWidth = controls.getPreferredSize().width + 15;
+        int coordinateComponentMinWidth = controlsMinHeight * coordinateSystemComponent.WIDTH / coordinateSystemComponent.HEIGHT;
+        setMinimumSize(new Dimension(controlsMinWidth + coordinateComponentMinWidth, controlsMinHeight));
     }
 
     private void initFields(){
@@ -54,6 +64,7 @@ public class Neuron extends JFrame{
         CoordinateSystemMouseListener listener = new CoordinateSystemMouseListener(coordinateSystemComponent, cursorPosition);
         coordinateSystemComponent.addMouseListener(listener);
         coordinateSystemComponent.addMouseMotionListener(listener);
+        coordinateSystemComponent.addMouseWheelListener(listener);
 
         weightX = new JTextField(10);
         weightX.setText(initWeightX + "");
@@ -91,14 +102,13 @@ public class Neuron extends JFrame{
         ButtonGroup functionType = new ButtonGroup();
         functionType.add(functionUp);
         functionType.add(functionDown);
+
+        controls = new JPanel();
     }
 
     private void initGUI(){
-        JPanel coordinateComponent = new JPanel();
-        coordinateComponent.add(coordinateSystemComponent);
-        add(coordinateComponent, BorderLayout.CENTER);
+        add(coordinateSystemComponent, BorderLayout.CENTER);
 
-        JPanel controls = new JPanel();
         GridBagLayout layout = new GridBagLayout();
         controls.setLayout(layout);
         GridBagConstraints gridBagConstraints = new GridBagConstraints();

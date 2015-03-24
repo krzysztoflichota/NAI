@@ -6,7 +6,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
+import java.math.BigDecimal;
 
 /**
  * Created by Krzysztof Lichota on 2015-03-21.
@@ -16,6 +18,10 @@ public class CoordinateSystemMouseListener extends MouseAdapter {
     private CoordinateSystemComponent coordinateSystemComponent;
     private JLabel cursorPosition;
 
+    public static final double ZOOM = 0.2;
+    public static final double MIN_ZOOM = 3.0;
+    public static final double MAX_ZOOM = 4900000.0;
+
     public CoordinateSystemMouseListener(CoordinateSystemComponent coordinateSystemComponent, JLabel cursorPosition) {
         this.coordinateSystemComponent = coordinateSystemComponent;
         this.cursorPosition = cursorPosition;
@@ -23,7 +29,7 @@ public class CoordinateSystemMouseListener extends MouseAdapter {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        coordinateSystemComponent.addPoint(new Point2D.Double(CoordinateSystemComponent.getPixelsInX(e.getX()), -CoordinateSystemComponent.getPixelsInY(e.getY())));
+        coordinateSystemComponent.addPoint(new Point2D.Double(coordinateSystemComponent.getPixelsInX(e.getX()), -coordinateSystemComponent.getPixelsInY(e.getY())));
         coordinateSystemComponent.repaint();
     }
 
@@ -38,16 +44,30 @@ public class CoordinateSystemMouseListener extends MouseAdapter {
     }
 
     public void mouseMoved(MouseEvent e) {
-        double x = CoordinateSystemComponent.getPixelsInX(e.getX());
-        double y = CoordinateSystemComponent.getPixelsInY(e.getY());
+        BigDecimal x = new BigDecimal(coordinateSystemComponent.getPixelsInX(e.getX()));
+        BigDecimal y = new BigDecimal(coordinateSystemComponent.getPixelsInY(e.getY()));
 
-        cursorPosition.setText("(" + x + ", " + y + ")");
+        cursorPosition.setText("(" + x.setScale(5, BigDecimal.ROUND_HALF_UP) + ", " + y.setScale(5, BigDecimal.ROUND_HALF_UP) + ")");
 
-        boolean isCursorAboveNeuron = (x*coordinateSystemComponent.getNeuron().getWeightX() + y*coordinateSystemComponent.getNeuron().getWeightY() + coordinateSystemComponent.getNeuron().getTeta()) == 0;
+        boolean isCursorAboveNeuron = (x.doubleValue()*coordinateSystemComponent.getNeuron().getWeightX() + y.doubleValue()*coordinateSystemComponent.getNeuron().getWeightY() + coordinateSystemComponent.getNeuron().getTeta()) == 0;
 
         if(isCursorAboveNeuron) cursorPosition.setForeground(Color.GREEN);
         else cursorPosition.setForeground(UIManager.getDefaults().getColor("JLabel.foreground"));
 
         cursorPosition.repaint();
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        int turns = e.getWheelRotation();
+
+        if(turns > 0 && coordinateSystemComponent.GAP < MAX_ZOOM){
+            coordinateSystemComponent.GAP *= 1 + ZOOM;
+        }
+        else if(turns < 0 && coordinateSystemComponent.GAP > MIN_ZOOM){
+            coordinateSystemComponent.GAP *= 1 - ZOOM;
+        }
+
+        coordinateSystemComponent.repaint();
     }
 }

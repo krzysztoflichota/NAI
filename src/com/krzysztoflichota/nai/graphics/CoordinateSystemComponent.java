@@ -15,9 +15,9 @@ import java.util.List;
  */
 public class CoordinateSystemComponent extends JComponent {
 
-    public static final int WIDTH = 800;
-    public static final int HEIGHT = 600;
-    public static final int GAP = 20;
+    public int WIDTH = 800;
+    public int HEIGHT = 600;
+    public double GAP = 20;
     public static final int POINT_SIZE = 10;
 
     private java.util.List<Point2D> points = new LinkedList<>();
@@ -25,6 +25,7 @@ public class CoordinateSystemComponent extends JComponent {
 
     public CoordinateSystemComponent(NeuronModel neuron) {
         this.neuron = neuron;
+        setSize(WIDTH, HEIGHT);
     }
 
     public NeuronModel getNeuron() {
@@ -48,6 +49,7 @@ public class CoordinateSystemComponent extends JComponent {
         super.paintComponent(g);
         Graphics2D graphics2D = (Graphics2D) g;
 
+        fixSize();
         paintBackground(graphics2D);
         drawNet(graphics2D);
         drawNeuron(graphics2D);
@@ -116,12 +118,14 @@ public class CoordinateSystemComponent extends JComponent {
         Color presentColor = g.getColor();
         g.setColor(Color.BLACK);
 
-        for(int i = 0; i <= WIDTH; i += GAP){
-            g.drawLine(i, 0, i, HEIGHT);
+        for(int i = 0; i <= WIDTH/2; i += GAP){
+            g.drawLine(WIDTH/2 + i, 0, WIDTH/2 + i, HEIGHT);
+            g.drawLine(WIDTH/2 - i, 0, WIDTH/2 - i, HEIGHT);
         }
 
-        for(int i = 0; i <= HEIGHT; i += GAP){
-            g.drawLine(0, i, WIDTH, i);
+        for(int i = 0; i <= HEIGHT/2; i += GAP){
+            g.drawLine(0, HEIGHT/2 + i, WIDTH, HEIGHT/2 + i);
+            g.drawLine(0, HEIGHT/2 - i, WIDTH, HEIGHT/2 - i);
         }
 
         Stroke presentStroke = g.getStroke();
@@ -137,24 +141,29 @@ public class CoordinateSystemComponent extends JComponent {
         points.clear();
     }
 
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(WIDTH, HEIGHT);
-    }
-
-    public static double getXInPixels(double x){
+    public double getXInPixels(double x){
         return x*GAP + WIDTH / 2;
     }
 
-    public static double getYInPixels(double y){
+    public double getYInPixels(double y){
         return y*GAP + HEIGHT / 2;
     }
 
-    public static double getPixelsInX(double x){
+    public double getPixelsInX(double x){
         return (x - WIDTH / 2)/GAP;
     }
 
-    public static double getPixelsInY(double y){
+    public double getPixelsInY(double y){
         return -(y - HEIGHT / 2)/GAP;
+    }
+
+    private void fixSize(){
+        WIDTH = getWidth();
+        HEIGHT = getHeight();
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(WIDTH, HEIGHT);
     }
 }
