@@ -1,5 +1,6 @@
 package com.krzysztoflichota.nai.utilities;
 
+import com.krzysztoflichota.nai.Neuron;
 import com.krzysztoflichota.nai.graphics.CoordinateSystemComponent;
 
 import javax.swing.*;
@@ -15,21 +16,44 @@ import java.math.BigDecimal;
  * krzysztoflichota.com
  */
 public class CoordinateSystemMouseListener extends MouseAdapter {
+
     private CoordinateSystemComponent coordinateSystemComponent;
     private JLabel cursorPosition;
+    private Neuron controller;
+
+    private Point current;
+    private int lastXOffset = 0;
+    private int lastYOffset = 0;
 
     public static final double ZOOM = 0.2;
     public static final double MIN_ZOOM = 3.0;
     public static final double MAX_ZOOM = 4900000.0;
 
-    public CoordinateSystemMouseListener(CoordinateSystemComponent coordinateSystemComponent, JLabel cursorPosition) {
+    public CoordinateSystemMouseListener(CoordinateSystemComponent coordinateSystemComponent, JLabel cursorPosition, Neuron controller) {
         this.coordinateSystemComponent = coordinateSystemComponent;
         this.cursorPosition = cursorPosition;
+        this.controller = controller;
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        coordinateSystemComponent.addPoint(new Point2D.Double(coordinateSystemComponent.getPixelsInX(e.getX()), -coordinateSystemComponent.getPixelsInY(e.getY())));
+        int x = e.getX() - coordinateSystemComponent.OFFSET_X;
+        int y = e.getY() - coordinateSystemComponent.OFFSET_Y;
+
+        if(e.getButton() == MouseEvent.BUTTON3) {
+            current = e.getPoint();
+            lastXOffset = coordinateSystemComponent.OFFSET_X;
+            lastYOffset = coordinateSystemComponent.OFFSET_Y;
+        } else if(e.getButton() == MouseEvent.BUTTON2) {
+            coordinateSystemComponent.getPoints().remove(coordinateSystemComponent.getPoint(x, y));
+            current = null;
+        }
+        else{
+            if(controller.isLearningMode()) controller.getPerceptron().addPoint(new ClassifiedPoint(coordinateSystemComponent.getPixelsInX(x), -coordinateSystemComponent.getPixelsInY(y), controller.getSelectedPointType()));
+            else coordinateSystemComponent.addPoint(new Point2D.Double(coordinateSystemComponent.getPixelsInX(x), -coordinateSystemComponent.getPixelsInY(y)));
+            current = null;
+        }
+
         coordinateSystemComponent.repaint();
     }
 
@@ -44,8 +68,8 @@ public class CoordinateSystemMouseListener extends MouseAdapter {
     }
 
     public void mouseMoved(MouseEvent e) {
-        BigDecimal x = new BigDecimal(coordinateSystemComponent.getPixelsInX(e.getX()));
-        BigDecimal y = new BigDecimal(coordinateSystemComponent.getPixelsInY(e.getY()));
+        BigDecimal x = new BigDecimal(coordinateSystemComponent.getPixelsInX(e.getX() - coordinateSystemComponent.OFFSET_X));
+        BigDecimal y = new BigDecimal(coordinateSystemComponent.getPixelsInY(e.getY() - coordinateSystemComponent.OFFSET_Y));
 
         cursorPosition.setText("(" + x.setScale(5, BigDecimal.ROUND_HALF_UP) + ", " + y.setScale(5, BigDecimal.ROUND_HALF_UP) + ")");
 
@@ -62,12 +86,23 @@ public class CoordinateSystemMouseListener extends MouseAdapter {
         int turns = e.getWheelRotation();
 
         if(turns > 0 && coordinateSystemComponent.GAP < MAX_ZOOM){
-            coordinateSystemComponent.GAP *= 1 + ZOOM;
+            coordinateSystemComponent.zoomIn(ZOOM);
         }
         else if(turns < 0 && coordinateSystemComponent.GAP > MIN_ZOOM){
-            coordinateSystemComponent.GAP *= 1 - ZOOM;
+            coordinateSystemComponent.zoomOut(ZOOM);
         }
 
         coordinateSystemComponent.repaint();
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        if(current != null) {
+            int xOffset = (int) (e.getX() - current.getX());
+            int yOffset = (int) (e.getY() - current.getY());
+            coordinateSystemComponent.OFFSET_X = lastXOffset + xOffset;
+            coordinateSystemComponent.OFFSET_Y = lastYOffset + yOffset;
+            coordinateSystemComponent.repaint();
+        }
     }
 }

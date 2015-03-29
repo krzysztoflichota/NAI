@@ -6,28 +6,32 @@ package com.krzysztoflichota.nai.neuron;
  */
 public class ActivationFunction {
 
-    private boolean includeLine;
+    private FunctionType type;
 
-    public ActivationFunction(boolean includeLine) {
-        this.includeLine = includeLine;
+    public ActivationFunction(FunctionType type) {
+        this.type = type;
     }
 
-    public int getOutput(double input){
-        if(includeLine){
-            if(input >=0) return 1;
-            else return 0;
+    public int getOutput(double input) {
+
+        switch (type) {
+            case STEP_DOT_UP:
+                if (input >= 0) return 1;
+                else return 0;
+            case STEP_DOT_DOWN:
+                if (input > 0) return 1;
+                else return 0;
         }
-        else{
-            if(input > 0) return 1;
-            else return 0;
-        }
+
+        return 0;
     }
 
-    public boolean isIncludeLine() {
-        return includeLine;
+
+    public FunctionType isIncludeLine() {
+        return type;
     }
 
-    public void setIncludeLine(boolean includeLine) {
-        this.includeLine = includeLine;
+    public void setIncludeLine(FunctionType type) {
+        this.type = type;
     }
 }

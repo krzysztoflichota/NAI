@@ -2,8 +2,12 @@ package com.krzysztoflichota.nai;
 
 import com.krzysztoflichota.nai.graphics.CoordinateSystemComponent;
 import com.krzysztoflichota.nai.neuron.ActivationFunction;
+import com.krzysztoflichota.nai.neuron.FunctionType;
 import com.krzysztoflichota.nai.neuron.NeuronModel;
+import com.krzysztoflichota.nai.neuron.PerceptronModel;
+import com.krzysztoflichota.nai.utilities.ClassifiedPoint;
 import com.krzysztoflichota.nai.utilities.CoordinateSystemMouseListener;
+import com.krzysztoflichota.nai.utilities.PointType;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -21,9 +25,20 @@ public class Neuron extends JFrame{
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
+                try {
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (UnsupportedLookAndFeelException e) {
+                    e.printStackTrace();
+                }
+
                 JFrame f = new Neuron();
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                //f.setResizable(false);
                 f.setTitle("Model Neuronu");
                 f.setVisible(true);
             }
@@ -31,12 +46,15 @@ public class Neuron extends JFrame{
     }
 
     private CoordinateSystemComponent coordinateSystemComponent;
-    private JTextField weightX, weightY, teta, pointX, pointY;
-    private JButton refresh, clear, addPoint;
-    private JRadioButton functionUp, functionDown;
+    private JTextField weightX, weightY, teta, pointX, pointY, numberOfSteps, learningFactor;
+    private JButton refresh, clear, addPoint, nextLearningStep, startLearning;
+    private JRadioButton functionUp, functionDown, rectanglesPoints, circlePoints;
     private JLabel cursorPosition;
+    private JToggleButton learningMode;
 
-    private JPanel controls;
+    private JPanel controls, neuronProperties, neuronLearningPanel;
+
+    private PerceptronModel perceptron;
 
     public static final double initWeightX = 1.00;
     public static final double initWeightY = 1.00;
@@ -52,16 +70,19 @@ public class Neuron extends JFrame{
     private void setSizes() {
         int controlsMinHeight = controls.getPreferredSize().height + 35;
         int controlsMinWidth = controls.getPreferredSize().width + 15;
-        int coordinateComponentMinWidth = controlsMinHeight * coordinateSystemComponent.WIDTH / coordinateSystemComponent.HEIGHT;
-        setMinimumSize(new Dimension(controlsMinWidth + coordinateComponentMinWidth, controlsMinHeight));
+        setMinimumSize(new Dimension(controlsMinWidth + controlsMinHeight, controlsMinHeight));
+    }
+
+    public PerceptronModel getPerceptron() {
+        return perceptron;
     }
 
     private void initFields(){
         cursorPosition = new JLabel("(0, 0)");
 
-        coordinateSystemComponent = new CoordinateSystemComponent(new NeuronModel(initWeightX, initWeightY, initTeta, new ActivationFunction(true)));
+        coordinateSystemComponent = new CoordinateSystemComponent(new NeuronModel(initWeightX, initWeightY, initTeta, new ActivationFunction(FunctionType.STEP_DOT_UP)));
         coordinateSystemComponent.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
-        CoordinateSystemMouseListener listener = new CoordinateSystemMouseListener(coordinateSystemComponent, cursorPosition);
+        CoordinateSystemMouseListener listener = new CoordinateSystemMouseListener(coordinateSystemComponent, cursorPosition, this);
         coordinateSystemComponent.addMouseListener(listener);
         coordinateSystemComponent.addMouseMotionListener(listener);
         coordinateSystemComponent.addMouseWheelListener(listener);
@@ -104,6 +125,44 @@ public class Neuron extends JFrame{
         functionType.add(functionDown);
 
         controls = new JPanel();
+
+        learningMode = new JToggleButton("Tryb nauki");
+        learningMode.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setLearningMode(learningMode.isSelected());
+            }
+        });
+        nextLearningStep = new JButton("Nast. krok");
+        nextLearningStep.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                nextLearningStep();
+            }
+        });
+        startLearning = new JButton("Start");
+        startLearning.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try{
+                    int numberOfRepeats = Integer.parseInt(numberOfSteps.getText());
+                    if(numberOfRepeats < 0) throw new IllegalStateException();
+                    repeatLearningStep(numberOfRepeats);
+                }
+                catch(NumberFormatException | IllegalComponentStateException exc){
+                    showError("Zła liczba powtórzeń!");
+                }
+            }
+        });
+        numberOfSteps = new JTextField(10);
+        numberOfSteps.setText("1000");
+        learningFactor = new JTextField(10);
+        learningFactor.setText("0.1");
+        rectanglesPoints = new JRadioButton("Kwadraty", true);
+        circlePoints = new JRadioButton("Kółka");
+        ButtonGroup pointType = new ButtonGroup();
+        pointType.add(rectanglesPoints);
+        pointType.add(circlePoints);
     }
 
     private void initGUI(){
@@ -114,7 +173,24 @@ public class Neuron extends JFrame{
         GridBagConstraints gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
 
-        JPanel neuronProperties = new JPanel();
+        createNeuronPropertiesPanel();
+        controls.add(neuronProperties, gridBagConstraints);
+        gridBagConstraints.gridy = 1;
+
+        JPanel pointsControls = createPointsControlPanel();
+        controls.add(pointsControls, gridBagConstraints);
+        gridBagConstraints.gridy = 2;
+
+        createLearningControlPanel();
+        controls.add(neuronLearningPanel, gridBagConstraints);
+
+        add(controls, BorderLayout.EAST);
+
+        setLearningMode(false);
+    }
+
+    private JPanel createNeuronPropertiesPanel(){
+        neuronProperties = new JPanel();
         neuronProperties.setLayout(new GridLayout(6, 2, 5, 5));
         neuronProperties.add(new JLabel("Waga X:"));
         neuronProperties.add(weightX);
@@ -132,9 +208,10 @@ public class Neuron extends JFrame{
         border = BorderFactory.createTitledBorder(border, "Właściwości neuronu");
         neuronProperties.setBorder(border);
 
-        controls.add(neuronProperties, gridBagConstraints);
-        gridBagConstraints.gridy = 1;
+        return neuronProperties;
+    }
 
+    private JPanel createPointsControlPanel(){
         JPanel pointsControls = new JPanel();
         pointsControls.setLayout(new GridLayout(4, 2, 5, 5));
         pointsControls.add(new JLabel("X:"));
@@ -145,13 +222,35 @@ public class Neuron extends JFrame{
         pointsControls.add(addPoint);
         pointsControls.add(cursorPosition);
         pointsControls.add(clear);
-        border = BorderFactory.createLineBorder(Color.BLACK);
+        Border border = BorderFactory.createLineBorder(Color.BLACK);
         border = BorderFactory.createTitledBorder(border, "Dodaj punkt");
         pointsControls.setBorder(border);
 
-        controls.add(pointsControls, gridBagConstraints);
+        return pointsControls;
+    }
 
-        add(controls, BorderLayout.EAST);
+    private JPanel createLearningControlPanel(){
+        neuronLearningPanel = new JPanel();
+        neuronLearningPanel.setLayout(new GridLayout(7, 2, 5, 5));
+        neuronLearningPanel.add(new JLabel());
+        neuronLearningPanel.add(learningMode);
+        neuronLearningPanel.add(new JLabel("Max. liczba kroków:"));
+        neuronLearningPanel.add(numberOfSteps);
+        neuronLearningPanel.add(new JLabel("Wsp. nauki:"));
+        neuronLearningPanel.add(learningFactor);
+        neuronLearningPanel.add(new JLabel("Typ punktu:"));
+        neuronLearningPanel.add(rectanglesPoints);
+        neuronLearningPanel.add(new JLabel());
+        neuronLearningPanel.add(circlePoints);
+        neuronLearningPanel.add(new JLabel());
+        neuronLearningPanel.add(nextLearningStep);
+        neuronLearningPanel.add(new JLabel());
+        neuronLearningPanel.add(startLearning);
+        Border border = BorderFactory.createLineBorder(Color.BLACK);
+        border = BorderFactory.createTitledBorder(border, "Tryb uczenia");
+        neuronLearningPanel.setBorder(border);
+
+        return neuronLearningPanel;
     }
 
     private void refreshNeuron(){
@@ -159,7 +258,8 @@ public class Neuron extends JFrame{
             coordinateSystemComponent.getNeuron().setWeightX(Double.parseDouble(weightX.getText()));
             coordinateSystemComponent.getNeuron().setWeightY(Double.parseDouble(weightY.getText()));
             coordinateSystemComponent.getNeuron().setTeta(Double.parseDouble(teta.getText()));
-            coordinateSystemComponent.getNeuron().getActivationFunction().setIncludeLine(functionUp.isSelected());
+            if(functionUp.isSelected()) coordinateSystemComponent.getNeuron().getActivationFunction().setIncludeLine(FunctionType.STEP_DOT_UP);
+            else if(functionDown.isSelected()) coordinateSystemComponent.getNeuron().getActivationFunction().setIncludeLine(FunctionType.STEP_DOT_DOWN);
             coordinateSystemComponent.repaint();
         }catch (NumberFormatException e){
                 showError("Wprowadzone dane są złe!");
@@ -171,17 +271,87 @@ public class Neuron extends JFrame{
     }
 
     private void clearPoints(){
-        coordinateSystemComponent.clearPoints();
+        if(!isLearningMode())coordinateSystemComponent.clearPoints();
+        else perceptron.clearLearningSet();
         coordinateSystemComponent.repaint();
     }
 
     private void addPoint(){
         try {
-            Point2D point = new Point2D.Double(Double.parseDouble(pointX.getText()), -Double.parseDouble(pointY.getText()));
-            coordinateSystemComponent.addPoint(point);
-            coordinateSystemComponent.repaint();
+            double x = Double.parseDouble(pointX.getText());
+            double y = -Double.parseDouble(pointY.getText());
+            if(!isLearningMode())coordinateSystemComponent.addPoint(new Point2D.Double(x, y));
+            else perceptron.addPoint(new ClassifiedPoint(x, y, getSelectedPointType()));
         }catch (NumberFormatException e){
             showError("Wprowadzone dane są złe!");
         }
+
+        coordinateSystemComponent.repaint();
+    }
+
+    private void setLearningMode(boolean mode){
+        if(mode) {
+            perceptron = PerceptronModel.createPerceptronWithRandomWeigths();
+            coordinateSystemComponent.setNeuron(perceptron);
+            coordinateSystemComponent.clearPoints();
+            coordinateSystemComponent.setLearningMode(true);
+            actualizeNeuronProperties(perceptron);
+        }
+        else {
+            if(perceptron != null) coordinateSystemComponent.setLearningMode(false);
+        }
+
+        for(Component comp : neuronLearningPanel.getComponents()){
+            if(!comp.equals(learningMode))comp.setEnabled(mode);
+        }
+        for(Component comp : neuronProperties.getComponents()){
+            comp.setEnabled(!mode);
+        }
+
+        coordinateSystemComponent.repaint();
+    }
+
+    public boolean isLearningMode(){
+        return learningMode.isSelected();
+    }
+
+    private boolean nextLearningStep(){
+        if(!isLearningMode()) return false;
+        else if(perceptron.isLearningSetProperlyClassified()){
+            showError("Wszystkie punkty są zakwalifikowane poprawnie");
+            return false;
+        }
+
+        try {
+            perceptron.setLearnFactor(Double.parseDouble(learningFactor.getText()));
+        }
+        catch(NumberFormatException | IllegalStateException e){
+            showError("Zły współczynnik nauki!");
+        }
+
+        perceptron.nextLearningStep();
+        actualizeNeuronProperties(perceptron);
+        coordinateSystemComponent.repaint();
+
+        return true;
+    }
+
+    private void actualizeNeuronProperties(NeuronModel neuron){
+        weightX.setText(neuron.getWeightX() + "");
+        weightY.setText(neuron.getWeightY() + "");
+        teta.setText(neuron.getTeta() + "");
+    }
+
+    public PointType getSelectedPointType(){
+        if(rectanglesPoints.isSelected()) return PointType.RECTANGLE;
+        return PointType.CIRCLE;
+    }
+
+    private void repeatLearningStep(int count){
+        for(int i = 0; i < count; i++){
+            if(!nextLearningStep()) return;
+        }
+
+        showError("Nie udało się nauczyć podanego zbioru punktów w podanej liczbie kroków.");
     }
 }

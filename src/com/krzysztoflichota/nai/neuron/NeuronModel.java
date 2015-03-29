@@ -14,6 +14,13 @@ public class NeuronModel {
 
     private ActivationFunction activationFunction;
 
+    public NeuronModel(){
+        weightX = 1.00;
+        weightY = 1.00;
+        teta = 0.00;
+        activationFunction = new ActivationFunction(FunctionType.STEP_DOT_UP);
+    }
+
     public NeuronModel(double weightX, double weightY, double teta, ActivationFunction activationFunction) {
         this.weightX = weightX;
         this.weightY = weightY;
