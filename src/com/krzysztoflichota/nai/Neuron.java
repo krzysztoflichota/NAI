@@ -47,7 +47,7 @@ public class Neuron extends JFrame{
 
     private CoordinateSystemComponent coordinateSystemComponent;
     private JTextField weightX, weightY, teta, pointX, pointY, numberOfSteps, learningFactor;
-    private JButton refresh, clear, addPoint, nextLearningStep, startLearning;
+    private JButton refresh, clear, addPoint, nextLearningStep, startLearning, setRandomWeights;
     private JRadioButton functionUp, functionDown, rectanglesPoints, circlePoints;
     private JLabel cursorPosition;
     private JToggleButton learningMode;
@@ -154,6 +154,13 @@ public class Neuron extends JFrame{
                 }
             }
         });
+        setRandomWeights = new JButton("Losowe wagi");
+        setRandomWeights.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setPerceptronRandomWeights();
+            }
+        });
         numberOfSteps = new JTextField(10);
         numberOfSteps.setText("1000");
         learningFactor = new JTextField(10);
@@ -231,7 +238,7 @@ public class Neuron extends JFrame{
 
     private JPanel createLearningControlPanel(){
         neuronLearningPanel = new JPanel();
-        neuronLearningPanel.setLayout(new GridLayout(7, 2, 5, 5));
+        neuronLearningPanel.setLayout(new GridLayout(8, 2, 5, 5));
         neuronLearningPanel.add(new JLabel());
         neuronLearningPanel.add(learningMode);
         neuronLearningPanel.add(new JLabel("Max. liczba kroków:"));
@@ -242,6 +249,8 @@ public class Neuron extends JFrame{
         neuronLearningPanel.add(rectanglesPoints);
         neuronLearningPanel.add(new JLabel());
         neuronLearningPanel.add(circlePoints);
+        neuronLearningPanel.add(new JLabel());
+        neuronLearningPanel.add(setRandomWeights);
         neuronLearningPanel.add(new JLabel());
         neuronLearningPanel.add(nextLearningStep);
         neuronLearningPanel.add(new JLabel());
@@ -291,9 +300,10 @@ public class Neuron extends JFrame{
 
     private void setLearningMode(boolean mode){
         if(mode) {
-            perceptron = PerceptronModel.createPerceptronWithRandomWeigths();
+            NeuronModel neuron = coordinateSystemComponent.getNeuron();
+            perceptron = new PerceptronModel(neuron.getWeightX(), neuron.getWeightY(), neuron.getTeta(), neuron.getActivationFunction());
+            perceptron.addPoints(coordinateSystemComponent.getPoints());
             coordinateSystemComponent.setNeuron(perceptron);
-            coordinateSystemComponent.clearPoints();
             coordinateSystemComponent.setLearningMode(true);
             actualizeNeuronProperties(perceptron);
         }
@@ -353,5 +363,12 @@ public class Neuron extends JFrame{
         }
 
         showError("Nie udało się nauczyć podanego zbioru punktów w podanej liczbie kroków.");
+    }
+
+    private void setPerceptronRandomWeights(){
+        if(!isLearningMode()) return;
+        perceptron.setRandomWeights();
+        actualizeNeuronProperties(perceptron);
+        coordinateSystemComponent.repaint();
     }
 }

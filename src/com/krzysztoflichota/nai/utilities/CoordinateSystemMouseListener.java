@@ -45,7 +45,8 @@ public class CoordinateSystemMouseListener extends MouseAdapter {
             lastXOffset = coordinateSystemComponent.OFFSET_X;
             lastYOffset = coordinateSystemComponent.OFFSET_Y;
         } else if(e.getButton() == MouseEvent.BUTTON2) {
-            coordinateSystemComponent.getPoints().remove(coordinateSystemComponent.getPoint(x, y));
+            if(controller.isLearningMode()) controller.getPerceptron().getLearningSet().remove(coordinateSystemComponent.getPoint(x, y, controller.getPerceptron().getLearningSet()));
+            else coordinateSystemComponent.getPoints().remove(coordinateSystemComponent.getPoint(x, y));
             current = null;
         }
         else{

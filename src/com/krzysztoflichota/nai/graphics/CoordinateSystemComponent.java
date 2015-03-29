@@ -29,10 +29,6 @@ public class CoordinateSystemComponent extends JComponent {
     private NeuronModel neuron;
     private boolean learningMode;
 
-    public boolean isLearningMode() {
-        return learningMode;
-    }
-
     public CoordinateSystemComponent(NeuronModel neuron) {
         this.neuron = neuron;
         setSize(WIDTH, HEIGHT);
@@ -214,6 +210,18 @@ public class CoordinateSystemComponent extends JComponent {
     }
 
     public Point2D getPoint(int xPixels, int yPixels){
+        double offset = POINT_SIZE / 2;
+        for(Point2D point : points){
+            double x = getXInPixels(point.getX());
+            double y = getYInPixels(point.getY());
+
+            if(xPixels >= x - offset && xPixels <= x + offset && yPixels >= y - offset && yPixels <= y + offset) return point;
+        }
+
+        return null;
+    }
+
+    public Point2D getPoint(int xPixels, int yPixels, List<? extends Point2D> points){
         double offset = POINT_SIZE / 2;
         for(Point2D point : points){
             double x = getXInPixels(point.getX());

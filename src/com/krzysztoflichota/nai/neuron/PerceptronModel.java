@@ -4,6 +4,7 @@ import com.krzysztoflichota.nai.Neuron;
 import com.krzysztoflichota.nai.utilities.ClassifiedPoint;
 import com.krzysztoflichota.nai.utilities.PointType;
 
+import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -94,5 +95,26 @@ public class PerceptronModel extends NeuronModel{
 
     public void clearLearningSet(){
         learningSet.clear();
+    }
+
+    public void removePoint(ClassifiedPoint point){
+        learningSet.remove(point);
+    }
+
+    public void addPoints(List<? extends Point2D> points){
+        for(Point2D point : points){
+            if(getOutput(point) == 1){
+                learningSet.add(new ClassifiedPoint(point.getX(), point.getY(), PointType.RECTANGLE));
+            }
+            else if(getOutput(point) == 0){
+                learningSet.add(new ClassifiedPoint(point.getX(), point.getY(), PointType.CIRCLE));
+            }
+        }
+    }
+
+    public void setRandomWeights(){
+        setWeightX(Math.random()*10);
+        setWeightY(Math.random()*10);
+        setTeta(Math.random()*25);
     }
 }
