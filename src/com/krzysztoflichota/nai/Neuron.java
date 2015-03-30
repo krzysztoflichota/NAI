@@ -239,7 +239,7 @@ public class Neuron extends JFrame{
     private JPanel createLearningControlPanel(){
         neuronLearningPanel = new JPanel();
         neuronLearningPanel.setLayout(new GridLayout(8, 2, 5, 5));
-        neuronLearningPanel.add(new JLabel());
+        neuronLearningPanel.add(new JLabel("Włącz:"));
         neuronLearningPanel.add(learningMode);
         neuronLearningPanel.add(new JLabel("Max. liczba kroków:"));
         neuronLearningPanel.add(numberOfSteps);
@@ -256,7 +256,7 @@ public class Neuron extends JFrame{
         neuronLearningPanel.add(new JLabel());
         neuronLearningPanel.add(startLearning);
         Border border = BorderFactory.createLineBorder(Color.BLACK);
-        border = BorderFactory.createTitledBorder(border, "Tryb uczenia");
+        border = BorderFactory.createTitledBorder(border, "Tryb nauki");
         neuronLearningPanel.setBorder(border);
 
         return neuronLearningPanel;
@@ -303,6 +303,7 @@ public class Neuron extends JFrame{
             NeuronModel neuron = coordinateSystemComponent.getNeuron();
             perceptron = new PerceptronModel(neuron.getWeightX(), neuron.getWeightY(), neuron.getTeta(), neuron.getActivationFunction());
             perceptron.addPoints(coordinateSystemComponent.getPoints());
+            coordinateSystemComponent.clearPoints();
             coordinateSystemComponent.setNeuron(perceptron);
             coordinateSystemComponent.setLearningMode(true);
             actualizeNeuronProperties(perceptron);

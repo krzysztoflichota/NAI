@@ -5,9 +5,10 @@ import com.krzysztoflichota.nai.utilities.ClassifiedPoint;
 import com.krzysztoflichota.nai.utilities.PointType;
 
 import java.awt.geom.Point2D;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by Krzysztof Lichota on 2015-03-29.
@@ -17,9 +18,12 @@ public class PerceptronModel extends NeuronModel{
 
     private double learnFactor;
     private List<ClassifiedPoint> learningSet;
+    private Iterator<ClassifiedPoint> iterator;
 
     public PerceptronModel(Neuron neuron){
-
+        super();
+        learningSet = new LinkedList<>();
+        learnFactor = 0.1;
     }
 
     public PerceptronModel(double weightX, double weightY, double teta, ActivationFunction activationFunction) {

@@ -27,7 +27,7 @@ public class CoordinateSystemMouseListener extends MouseAdapter {
 
     public static final double ZOOM = 0.2;
     public static final double MIN_ZOOM = 3.0;
-    public static final double MAX_ZOOM = 4900000.0;
+    public static final double MAX_ZOOM = 4900.0;
 
     public CoordinateSystemMouseListener(CoordinateSystemComponent coordinateSystemComponent, JLabel cursorPosition, Neuron controller) {
         this.coordinateSystemComponent = coordinateSystemComponent;
@@ -41,18 +41,22 @@ public class CoordinateSystemMouseListener extends MouseAdapter {
         int y = e.getY() - coordinateSystemComponent.OFFSET_Y;
 
         if(e.getButton() == MouseEvent.BUTTON3) {
+            coordinateSystemComponent.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
             current = e.getPoint();
             lastXOffset = coordinateSystemComponent.OFFSET_X;
             lastYOffset = coordinateSystemComponent.OFFSET_Y;
-        } else if(e.getButton() == MouseEvent.BUTTON2) {
-            if(controller.isLearningMode()) controller.getPerceptron().getLearningSet().remove(coordinateSystemComponent.getPoint(x, y, controller.getPerceptron().getLearningSet()));
-            else coordinateSystemComponent.getPoints().remove(coordinateSystemComponent.getPoint(x, y));
+        } else {
             current = null;
-        }
-        else{
-            if(controller.isLearningMode()) controller.getPerceptron().addPoint(new ClassifiedPoint(coordinateSystemComponent.getPixelsInX(x), -coordinateSystemComponent.getPixelsInY(y), controller.getSelectedPointType()));
-            else coordinateSystemComponent.addPoint(new Point2D.Double(coordinateSystemComponent.getPixelsInX(x), -coordinateSystemComponent.getPixelsInY(y)));
-            current = null;
+            if (e.getButton() == MouseEvent.BUTTON2) {
+                if (controller.isLearningMode())
+                    controller.getPerceptron().getLearningSet().remove(coordinateSystemComponent.getPoint(x, y, controller.getPerceptron().getLearningSet()));
+                else coordinateSystemComponent.getPoints().remove(coordinateSystemComponent.getPoint(x, y));
+            } else {
+                if (controller.isLearningMode())
+                    controller.getPerceptron().addPoint(new ClassifiedPoint(coordinateSystemComponent.getPixelsInX(x), -coordinateSystemComponent.getPixelsInY(y), controller.getSelectedPointType()));
+                else
+                    coordinateSystemComponent.addPoint(new Point2D.Double(coordinateSystemComponent.getPixelsInX(x), -coordinateSystemComponent.getPixelsInY(y)));
+            }
         }
 
         coordinateSystemComponent.repaint();
@@ -105,5 +109,10 @@ public class CoordinateSystemMouseListener extends MouseAdapter {
             coordinateSystemComponent.OFFSET_Y = lastYOffset + yOffset;
             coordinateSystemComponent.repaint();
         }
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        coordinateSystemComponent.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
     }
 }

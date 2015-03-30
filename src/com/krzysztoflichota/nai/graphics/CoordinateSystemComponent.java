@@ -203,10 +203,14 @@ public class CoordinateSystemComponent extends JComponent {
 
     public void zoomIn(double zoom){
         GAP *= 1 + zoom;
+        OFFSET_X *= 1 + zoom;
+        OFFSET_Y *= 1 + zoom;
     }
 
     public void zoomOut(double zoom){
         GAP *= 1 - zoom;
+        OFFSET_X *= 1 - zoom;
+        OFFSET_Y *= 1 - zoom;
     }
 
     public Point2D getPoint(int xPixels, int yPixels){
