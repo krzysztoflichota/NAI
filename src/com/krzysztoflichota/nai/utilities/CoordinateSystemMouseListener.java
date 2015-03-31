@@ -39,24 +39,26 @@ public class CoordinateSystemMouseListener extends MouseAdapter {
     public void mousePressed(MouseEvent e) {
         int x = e.getX() - coordinateSystemComponent.OFFSET_X;
         int y = e.getY() - coordinateSystemComponent.OFFSET_Y;
+        current = null;
 
-        if(e.getButton() == MouseEvent.BUTTON3) {
-            coordinateSystemComponent.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
-            current = e.getPoint();
-            lastXOffset = coordinateSystemComponent.OFFSET_X;
-            lastYOffset = coordinateSystemComponent.OFFSET_Y;
-        } else {
-            current = null;
-            if (e.getButton() == MouseEvent.BUTTON2) {
-                if (controller.isLearningMode())
-                    controller.getPerceptron().getLearningSet().remove(coordinateSystemComponent.getPoint(x, y, controller.getPerceptron().getLearningSet()));
-                else coordinateSystemComponent.getPoints().remove(coordinateSystemComponent.getPoint(x, y));
-            } else {
+        switch(e.getButton()){
+            case MouseEvent.BUTTON1:
                 if (controller.isLearningMode())
                     controller.getPerceptron().addPoint(new ClassifiedPoint(coordinateSystemComponent.getPixelsInX(x), -coordinateSystemComponent.getPixelsInY(y), controller.getSelectedPointType()));
                 else
                     coordinateSystemComponent.addPoint(new Point2D.Double(coordinateSystemComponent.getPixelsInX(x), -coordinateSystemComponent.getPixelsInY(y)));
-            }
+                break;
+            case MouseEvent.BUTTON2:
+                if (controller.isLearningMode())
+                    controller.getPerceptron().getLearningSet().remove(coordinateSystemComponent.getPoint(x, y, controller.getPerceptron().getLearningSet()));
+                else coordinateSystemComponent.getPoints().remove(coordinateSystemComponent.getPoint(x, y));
+                break;
+            case MouseEvent.BUTTON3:
+                coordinateSystemComponent.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+                current = e.getPoint();
+                lastXOffset = coordinateSystemComponent.OFFSET_X;
+                lastYOffset = coordinateSystemComponent.OFFSET_Y;
+                break;
         }
 
         coordinateSystemComponent.repaint();

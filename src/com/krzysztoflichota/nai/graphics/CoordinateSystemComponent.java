@@ -87,7 +87,7 @@ public class CoordinateSystemComponent extends JComponent {
             y2 = HEIGHT/2;
         }
 
-        graphics2D.drawLine((int)getXInPixels(x1) + OFFSET_X, (int)getYInPixels(y1) + OFFSET_Y, (int)getXInPixels(x2) + OFFSET_X, (int)getYInPixels(y2) + OFFSET_Y);
+        graphics2D.drawLine((int)(getXInPixels(x1) + OFFSET_X), (int)(getYInPixels(y1) + OFFSET_Y), (int)(getXInPixels(x2) + OFFSET_X), (int)(getYInPixels(y2)) + OFFSET_Y);
 
         graphics2D.setStroke(presentStroke);
         graphics2D.setColor(presentColor);
@@ -243,5 +243,9 @@ public class CoordinateSystemComponent extends JComponent {
             PerceptronModel perceptron = (PerceptronModel) neuron;
             for(Point2D.Double point : perceptron.getLearningSet()) points.add(point);
         }
+    }
+
+    public boolean isLearningMode() {
+        return learningMode;
     }
 }

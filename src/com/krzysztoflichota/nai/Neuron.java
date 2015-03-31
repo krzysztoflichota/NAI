@@ -323,7 +323,7 @@ public class Neuron extends JFrame{
     }
 
     public boolean isLearningMode(){
-        return learningMode.isSelected();
+        return coordinateSystemComponent.isLearningMode();
     }
 
     private boolean nextLearningStep(){
